@@ -141,15 +141,16 @@ pip install -r requirements.txt
 
 ### 3. Configure Environment Variables
 
-Create a `.env` file in `backend/`:
-
-```env
-DATABASE_URL=postgresql://username:password@host/database?sslmode=require
-FLASK_ENV=development
-FLASK_DEBUG=1
+```bash
+cd backend
+cp .env.example .env
 ```
 
-Replace the `DATABASE_URL` with your PostgreSQL connection string.
+Edit `.env` and add your PostgreSQL connection string:
+
+```env
+DATABASE_URL=postgresql://your_user:your_password@your_host/your_db?sslmode=require
+```
 
 ### 4. Frontend Setup
 

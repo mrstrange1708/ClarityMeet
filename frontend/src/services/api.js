@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+// In dev: VITE_API_URL is unset → falls back to '/api' → Vite proxy forwards to Flask
+// In prod: set VITE_API_URL at build time (e.g. https://your-backend.com/api)
 const API = axios.create({
-    baseURL: '/api',
+    baseURL: import.meta.env.VITE_API_URL || '/api',
 });
 
 // ─── Meetings ────────────────────────────────────────
