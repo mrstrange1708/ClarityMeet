@@ -22,6 +22,21 @@ def add_agenda_item(meeting_id):
         return jsonify({"error": str(e)}), 400
 
 
+@agenda_bp.route("/api/agenda/<int:item_id>", methods=["PATCH"])
+def update_agenda_item(item_id):
+    data = request.get_json()
+    try:
+        item = agenda_service.update_agenda_item(
+            item_id=item_id,
+            time_allocation=data.get("time_allocation"),
+        )
+        return jsonify(item.to_dict()), 200
+    except LookupError as e:
+        return jsonify({"error": str(e)}), 404
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+
 @agenda_bp.route("/api/agenda/<int:item_id>", methods=["DELETE"])
 def delete_agenda_item(item_id):
     try:

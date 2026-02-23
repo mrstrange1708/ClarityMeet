@@ -17,6 +17,7 @@ export const closeMeeting = (id) => API.patch(`/meetings/${id}/close`);
 // ─── Agenda ──────────────────────────────────────────
 export const addAgendaItem = (meetingId, data) =>
     API.post(`/meetings/${meetingId}/agenda`, data);
+export const updateAgendaItem = (id, data) => API.patch(`/agenda/${id}`, data);
 export const deleteAgendaItem = (id) => API.delete(`/agenda/${id}`);
 
 // ─── Action Items ────────────────────────────────────

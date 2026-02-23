@@ -5,6 +5,7 @@ import {
     startMeeting,
     closeMeeting,
     addAgendaItem,
+    updateAgendaItem,
     deleteAgendaItem,
     createActionItem,
     completeActionItem,
@@ -31,6 +32,7 @@ import {
     AlertTriangle,
     Star,
     Bot,
+    Pencil,
 } from 'lucide-react';
 
 export default function MeetingDetail() {
@@ -49,6 +51,8 @@ export default function MeetingDetail() {
     const [showActionForm, setShowActionForm] = useState(false);
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [aiSuggestions, setAiSuggestions] = useState({ agenda: [], actions: [], review: null });
+    const [editingAgendaId, setEditingAgendaId] = useState(null);
+    const [editAgendaTime, setEditAgendaTime] = useState(0);
 
     const showToast = (msg, type = 'success') => {
         setToast({ msg, type });
@@ -106,6 +110,17 @@ export default function MeetingDetail() {
             refresh();
         } catch (err) {
             showToast(err.response?.data?.error || 'Failed to delete', 'error');
+        }
+    };
+
+    const handleUpdateAgendaTime = async (itemId) => {
+        try {
+            await updateAgendaItem(itemId, { time_allocation: editAgendaTime });
+            setEditingAgendaId(null);
+            showToast('Time updated!');
+            refresh();
+        } catch (err) {
+            showToast(err.response?.data?.error || 'Failed to update', 'error');
         }
     };
 
@@ -226,7 +241,7 @@ export default function MeetingDetail() {
             {/* Agenda Section */}
             <div className="detail-section">
                 <div className="detail-section-header">
-                    <h3><ClipboardList size={16} style={{ verticalAlign: 'middle', marginRight: 8 }} />Agenda ({totalAgendaTime} min allocated)</h3>
+                    <h3><ClipboardList size={16} style={{ verticalAlign: 'middle', marginRight: 8 }} />Agenda ({totalAgendaTime} / {meeting.duration_minutes} min)</h3>
                     <div style={{ display: 'flex', gap: '8px' }}>
                         {status === 'Scheduled' && (
                             <>
@@ -295,10 +310,30 @@ export default function MeetingDetail() {
                         <div key={a.id} className="item-card">
                             <div className="item-card-info">
                                 <h4>{a.topic}</h4>
-                                <div className="meta"><Clock size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} />{a.time_allocation} min</div>
+                                {editingAgendaId === a.id ? (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                                        <input
+                                            type="number"
+                                            className="form-input"
+                                            style={{ width: '80px', padding: '4px 8px', fontSize: '0.8rem' }}
+                                            value={editAgendaTime}
+                                            onChange={(e) => setEditAgendaTime(parseInt(e.target.value) || 0)}
+                                            min="1"
+                                            autoFocus
+                                        />
+                                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>min</span>
+                                        <button className="btn btn-success btn-sm" style={{ padding: '4px 8px' }} onClick={() => handleUpdateAgendaTime(a.id)}><Check size={12} /></button>
+                                        <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }} onClick={() => setEditingAgendaId(null)}><X size={12} /></button>
+                                    </div>
+                                ) : (
+                                    <div className="meta"><Clock size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} />{a.time_allocation} min</div>
+                                )}
                             </div>
-                            {status === 'Scheduled' && (
-                                <button className="btn btn-danger btn-sm" onClick={() => handleDeleteAgenda(a.id)}><X size={14} /></button>
+                            {status === 'Scheduled' && editingAgendaId !== a.id && (
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                    <button className="btn btn-secondary btn-sm" onClick={() => { setEditingAgendaId(a.id); setEditAgendaTime(a.time_allocation); }}><Pencil size={14} /></button>
+                                    <button className="btn btn-danger btn-sm" onClick={() => handleDeleteAgenda(a.id)}><X size={14} /></button>
+                                </div>
                             )}
                         </div>
                     ))
