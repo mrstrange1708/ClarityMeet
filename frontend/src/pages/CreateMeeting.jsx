@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { createMeeting } from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, CalendarDays, Clock, Type } from 'lucide-react';
 
 export default function CreateMeeting() {
     const navigate = useNavigate();
     const [form, setForm] = useState({
         title: '',
-        scheduled_time: '',
+        date: '',
+        time: '',
         duration_minutes: 30,
     });
     const [error, setError] = useState('');
@@ -19,7 +20,13 @@ export default function CreateMeeting() {
         setSubmitting(true);
 
         try {
-            const res = await createMeeting(form);
+            // Combine date + time into ISO datetime string
+            const scheduled_time = `${form.date}T${form.time}`;
+            const res = await createMeeting({
+                title: form.title,
+                scheduled_time,
+                duration_minutes: form.duration_minutes,
+            });
             navigate(`/meetings/${res.data.id}`);
         } catch (err) {
             setError(err.response?.data?.error || 'Failed to create meeting.');
@@ -28,6 +35,8 @@ export default function CreateMeeting() {
         }
     };
 
+    const durations = [15, 30, 45, 60, 90, 120];
+
     return (
         <div>
             <div className="page-header">
@@ -35,47 +44,73 @@ export default function CreateMeeting() {
                 <p>Schedule a new structured meeting</p>
             </div>
 
-            <div className="card" style={{ maxWidth: '600px' }}>
+            <div className="card" style={{ maxWidth: '560px' }}>
                 <form onSubmit={handleSubmit}>
+                    {/* Title */}
                     <div className="form-group">
-                        <label>Meeting Title</label>
+                        <label>
+                            <Type size={12} style={{ verticalAlign: 'middle', marginRight: 6 }} />
+                            Meeting Title
+                        </label>
                         <input
                             className="form-input"
-                            placeholder="e.g. Sprint Planning, Design Review"
+                            placeholder="e.g. Sprint Planning, Design Review, Standup"
                             value={form.title}
                             onChange={(e) => setForm({ ...form, title: e.target.value })}
                             required
+                            autoFocus
                         />
                     </div>
 
-                    <div className="form-group">
-                        <label>Scheduled Time</label>
-                        <input
-                            type="datetime-local"
-                            className="form-input"
-                            value={form.scheduled_time}
-                            onChange={(e) =>
-                                setForm({ ...form, scheduled_time: e.target.value })
-                            }
-                            required
-                        />
+                    {/* Date and Time — side by side */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        <div className="form-group">
+                            <label style={{ color: 'white' }}>
+                                <CalendarDays size={12} style={{ verticalAlign: 'middle', marginRight: 6 }} />
+                                Date
+                            </label>
+                            <input
+                                type="date"
+                                className="form-input"
+                                value={form.date}
+                                onChange={(e) => setForm({ ...form, date: e.target.value })}
+                                required
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label style={{ color: 'white' }}>
+                                <Clock size={12} style={{ verticalAlign: 'middle', marginRight: 6 }} />
+                                Time
+                            </label>
+                            <input
+                                type="time"
+                                className="form-input"
+                                value={form.time}
+                                onChange={(e) => setForm({ ...form, time: e.target.value })}
+                                required
+                            />
+                        </div>
                     </div>
 
+                    {/* Duration — Quick Selectors */}
                     <div className="form-group">
-                        <label>Duration (minutes)</label>
-                        <input
-                            type="number"
-                            className="form-input"
-                            value={form.duration_minutes}
-                            onChange={(e) =>
-                                setForm({
-                                    ...form,
-                                    duration_minutes: parseInt(e.target.value) || 0,
-                                })
-                            }
-                            min="1"
-                            required
-                        />
+                        <label style={{ color: 'white' }}>
+                            <Clock size={12} style={{ verticalAlign: 'middle', marginRight: 6 }} />
+                            Duration
+                        </label>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            {durations.map((d) => (
+                                <button
+                                    key={d}
+                                    type="button"
+                                    className={`btn btn-sm ${form.duration_minutes === d ? 'btn-primary' : 'btn-secondary'}`}
+                                    onClick={() => setForm({ ...form, duration_minutes: d })}
+                                    style={{ minWidth: '56px', justifyContent: 'center' }}
+                                >
+                                    {d >= 60 ? `${d / 60}h` : `${d}m`}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     {error && (
